@@ -327,7 +327,7 @@ def menu_follow():
             medias = bot.get_user_medias(user_id, filtration=False)
             if len(medias):
                 likers = bot.get_media_likers(medias[0])
-                for liker in tqdm(likers):
+                for liker in tqdm(likers, disable = not bot.progress_bar):
                     bot.follow(liker)
 
         elif ans == "5":
@@ -398,7 +398,7 @@ def menu_like():
             medias = bot.get_user_medias(user_id, filtration=False)
             if len(medias):
                 likers = bot.get_media_likers(medias[0])
-                for liker in tqdm(likers):
+                for liker in tqdm(likers, disable = not bot.progress_bar):
                     bot.like_user(liker, amount=2)
 
         elif ans == "5":

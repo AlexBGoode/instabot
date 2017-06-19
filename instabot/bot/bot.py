@@ -36,6 +36,7 @@ from .bot_support import check_if_file_exists, read_list_from_file, check_whitel
 from .bot_support import add_whitelist, add_blacklist
 
 from .bot_stats import save_user_stats
+import time
 
 
 class Bot(API):
@@ -61,14 +62,15 @@ class Bot(API):
                  max_following_to_followers_ratio=2,
                  min_media_count_to_follow=3,
                  max_following_to_block=2000,
-                 like_delay=10,
-                 unlike_delay=10,
-                 follow_delay=30,
-                 unfollow_delay=30,
-                 comment_delay=60,
-                 block_delay=30,
-                 unblock_delay=30,
-                 stop_words=['shop', 'store', 'free']):
+                 like_delay=61,
+                 unlike_delay=61,
+                 follow_delay=61,
+                 unfollow_delay=61,
+                 comment_delay=61,
+                 block_delay=61,
+                 unblock_delay=61,
+                 stop_words=['shop', 'store', 'free', 'smm'],
+                 progress_bar=False):
         super(self.__class__, self).__init__()
 
         self.total_liked = 0
@@ -98,6 +100,7 @@ class Bot(API):
         self.max_following_to_followers_ratio = max_following_to_followers_ratio
         self.min_media_count_to_follow = min_media_count_to_follow
         self.stop_words = stop_words
+        self.progress_bar = progress_bar
 
         # limits - block
         self.max_following_to_block = max_following_to_block
@@ -110,6 +113,10 @@ class Bot(API):
         self.comment_delay = comment_delay
         self.block_delay = block_delay
         self.unblock_delay = unblock_delay
+
+        # remember last call time for all activities for precise delaying
+        self.like_delay_moment = self.unlike_delay_moment = self.follow_delay_moment = self.unfollow_delay_moment = \
+            self.comment_delay_moment = self.block_delay_moment = self.unblock_delay_moment = 0
 
         # current following
         self.following = []
@@ -355,7 +362,7 @@ class Bot(API):
     def check_media(self, media):
         return check_media(self, media)
 
-    def check_user(self, user, filter_closed_acc=False):
+    def check_user(self, user, filter_closed_acc=True):
         return check_user(self, user, filter_closed_acc)
 
     def check_not_bot(self, user):

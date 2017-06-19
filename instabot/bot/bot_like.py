@@ -20,7 +20,8 @@ def like_medias(self, medias):
         self.logger.info("Nothing to like.")
         return broken_items
     self.logger.info("Going to like %d medias." % (len(medias)))
-    for media in tqdm(medias):
+
+    for media in tqdm(medias, disable = not self.progress_bar):
         if not self.like(media):
             delay.error_delay(self)
             broken_items = medias[medias.index(media):]

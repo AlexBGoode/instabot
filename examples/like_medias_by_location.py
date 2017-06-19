@@ -28,7 +28,7 @@ except NameError:
 def like_location_feed(new_bot, new_location, amount=0):
     counter = 0
     max_id = ''
-    with tqdm(total=amount) as pbar:
+    with tqdm(total=amount, disable = not bot.progress_bar) as pbar:
         while counter < amount:
             if new_bot.getLocationFeed(new_location['location']['pk'], maxid=max_id):
                 location_feed = new_bot.LastJson

@@ -34,7 +34,7 @@ def unblock(self, user_id):
 def block_users(self, user_ids):
     broken_items = []
     self.logger.info("Going to block %d users." % len(user_ids))
-    for user_id in tqdm(user_ids):
+    for user_id in tqdm(user_ids, disable = not self.progress_bar):
         if not self.block(user_id):
             delay.error_delay(self)
             broken_items = user_ids[user_ids.index(user_id):]
@@ -46,7 +46,7 @@ def block_users(self, user_ids):
 def unblock_users(self, user_ids):
     broken_items = []
     self.logger.info("Going to unblock %d users." % len(user_ids))
-    for user_id in tqdm(user_ids):
+    for user_id in tqdm(user_ids, disable = not self.progress_bar):
         if not self.unblock(user_id):
             delay.error_delay(self)
             broken_items.append(user_id)
@@ -60,7 +60,7 @@ def block_bots(self):
     your_likers = self.get_user_likers(self.user_id)
     not_likers = list(set(your_followers) - set(your_likers))
     random.shuffle(not_likers)
-    for user in tqdm(not_likers):
+    for user in tqdm(not_likers, disable = not self.progress_bar):
         if not self.check_not_bot(user):
             self.logger.info("Found bot: "
                              "https://instagram.com/%s/" % self.get_user_info(user)["username"])

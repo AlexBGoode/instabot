@@ -9,7 +9,6 @@
     2) You should pass user_id, not username
 """
 
-import time
 import sys
 import os
 

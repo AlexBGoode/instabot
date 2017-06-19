@@ -18,7 +18,10 @@ def like(bot, user_id, nlikes=3):
     return True
 
 def like_media_likers(bot, media, nlikes=3):
-    for user in tqdm(bot.get_media_likers(media), desc="Media likers"):
+    for user in tqdm(bot.get_media_likers(media),
+                     disable=not bot.progress_bar,
+                     desc="Media likers"):
+        like(bot, user, nlikes)
         time.sleep(10 + 20 * random.random())
     return True
 

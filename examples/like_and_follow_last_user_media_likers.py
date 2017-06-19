@@ -28,6 +28,6 @@ for username in args.users:
     medias = bot.get_user_medias(username, filtration=False)
     if len(medias):
         likers = bot.get_media_likers(medias[0])
-        for liker in tqdm(likers):
+        for liker in tqdm(likers, disable = not bot.progress_bar):
             bot.like_user(liker, amount=2)
             bot.follow(liker)

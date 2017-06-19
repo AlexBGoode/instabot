@@ -4,9 +4,7 @@ import time
 import sys
 import os
 import random
-import yaml             #->added to make pics upload -> see job8
 import glob             #->added to make pics upload -> see job8
-from tqdm import tqdm
 import threading        #->added to make multithreadening possible -> see fn run_threaded
 
 sys.path.append(os.path.join(sys.path[0],'../../'))

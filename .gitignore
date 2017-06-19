@@ -102,5 +102,5 @@ bot_cp_*
 .idea
 
 # Settings files
-examples/*.txt
+**/*.txt
 *.checkpoint

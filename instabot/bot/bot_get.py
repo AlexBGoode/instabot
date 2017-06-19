@@ -45,7 +45,8 @@ def get_user_likers(self, user_id, media_count=10):
         self.logger.warning("Can't get %s medias." % user_id)
         return []
     for media_id in tqdm(media_items[:media_count],
-                         desc="Getting %s media likers" % user_id):
+                         desc="Getting %s media likers" % user_id,
+                         disable = not self.progress_bar):
         media_likers = self.get_media_likers(media_id)
         your_likers |= set(media_likers)
     return list(your_likers)

@@ -34,5 +34,7 @@ bot.login(username=args.u, password=args.p,
           proxy=args.proxy)
 
 timeline_medias = bot.get_timeline_medias()
-for media in tqdm(timeline_medias, desc="timeline"):
+for media in tqdm(timeline_medias,
+                  disable=not bot.progress_bar,
+                  desc="timeline"):
     bot.like_user(bot.get_media_owner(media))

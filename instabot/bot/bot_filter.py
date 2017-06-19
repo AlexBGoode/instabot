@@ -87,54 +87,98 @@ def check_user(self, user_id, filter_closed_acc=False):
 
     if not user_id:
         return False
+
     if self.whitelist and user_id in self.whitelist:
+        self.logger.debug("Check FALSE: whitelist")
         return True
+
     if self.blacklist and user_id in self.blacklist:
+        self.logger.debug("Check FALSE: blacklist")
         return False
 
     if self.following == []:
         self.following = self.get_user_following(self.user_id)
     if user_id in self.following:
+        self.logger.debug("Check FALSE: following already")
         return False
 
     user_info = self.get_user_info(user_id)
     if not user_info:
         return False
+
     if filter_closed_acc and "is_private" in user_info:
         if user_info["is_private"]:
+            self.logger.debug("Check FALSE: private - " + user_info["username"] )
             return False
-    if "is_business" in user_info:
-        if user_info["is_business"]:
-            return False
+
+    # if "is_business" in user_info:
+    #     if user_info["is_business"]:
+    #         self.logger.debug("Check FALSE: business - " + user_info["username"])
+    #         return False
+
     if "is_verified" in user_info:
         if user_info["is_verified"]:
+            self.logger.debug("Check FALSE: verified - " + user_info["username"])
             return False
+
     if "follower_count" in user_info and "following_count" in user_info:
         if user_info["follower_count"] < self.min_followers_to_follow:
+            self.logger.debug("Check FALSE: min_followers_to_follow [{0}] - {1}".format(
+                user_info["follower_count"],
+                user_info["username"]))
             return False
+
         if user_info["follower_count"] > self.max_followers_to_follow:
+            self.logger.debug("Check FALSE: max_followers_to_follow [{0}] - {1}".format(
+                user_info["follower_count"],
+                user_info["username"]))
             return False
+
         if user_info["following_count"] < self.min_following_to_follow:
+            self.logger.debug("Check FALSE: min_following_to_follow [{0}] - {1}".format(
+                user_info["following_count"],
+                user_info["username"]))
             return False
+
         if user_info["following_count"] > self.max_following_to_follow:
+            self.logger.debug("Check FALSE: max_following_to_follow [{0}] - {1}".format(
+                user_info["following_count"],
+                user_info["username"]))
             return False
+
         try:
-            if user_info["follower_count"] / user_info["following_count"] \
-                    > self.max_followers_to_following_ratio:
+            ratio = user_info["follower_count"] / user_info["following_count"]
+            if ratio > self.max_followers_to_following_ratio:
+                self.logger.debug("Check FALSE: follower/following ratio [{0}/{1}] - {2}".format(
+                    user_info["follower_count"],
+                    user_info["following_count"],
+                    user_info["username"]))
                 return False
-            if user_info["following_count"] / user_info["follower_count"] \
-                    > self.max_following_to_followers_ratio:
+
+            ratio = user_info["following_count"] / user_info["follower_count"]
+            if ratio > self.max_following_to_followers_ratio:
+                self.logger.debug("Check FALSE: following/follower ratio [{0}/{1}] - {2}".format(
+                    user_info["following_count"],
+                    user_info["follower_count"],
+                    user_info["username"]))
                 return False
+
         except ZeroDivisionError:
+            self.logger.debug("Check FALSE: hmm... ZeroDivisionError? - {}".format(user_info["username"]))
             return False
 
     if 'media_count' in user_info:
         if user_info["media_count"] < self.min_media_count_to_follow:
+            self.logger.debug("Check FALSE: min_media_count_to_follow [{0}] - {1}".format(
+                user_info["media_count"],
+                user_info["username"]))
             return False  # bot or inactive user
 
     if search_stop_words_in_user(self, user_info):
+        self.logger.debug("Check FALSE: stop words found - " + user_info["username"])
         return False
 
+    self.logger.debug("Check TRUE: all good - " + user_info["username"])
     return True
 
 

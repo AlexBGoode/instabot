@@ -18,7 +18,7 @@ def unlike(self, media_id):
 def unlike_medias(self, medias):
     broken_items = []
     self.logger.info("Going to unlike %d medias." % (len(medias)))
-    for media in tqdm(medias):
+    for media in tqdm(medias, disable = not self.progress_bar):
         if not self.unlike(media):
             delay.error_delay(self)
             broken_items = medias[medias.index(media):]

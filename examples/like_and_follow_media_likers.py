@@ -22,7 +22,9 @@ def like_and_follow(bot, user_id, nlikes=3):
 
 
 def like_and_follow_media_likers(bot, media, nlikes=3):
-    for user in tqdm(bot.get_media_likers(media), desc="Media likers"):
+    for user in tqdm(bot.get_media_likers(media),
+                     disable = not bot.progress_bar,
+                     desc = "Media likers"):
         like_and_follow(bot, user)
         time.sleep(10 + 20 * random.random())
     return True

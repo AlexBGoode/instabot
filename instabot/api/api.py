@@ -46,16 +46,18 @@ class API(object):
         # handle logging
         self.logger = logging.getLogger('[instabot]')
         self.logger.setLevel(logging.DEBUG)
-        logging.basicConfig(format='%(asctime)s %(message)s',
+        logging.basicConfig(format='%(asctime)s %(levelname)s [%(module)s.%(funcName)s] %(message)s', datefmt='%d %I:%M:%S %p',
                             filename='instabot.log',
                             level=logging.INFO
                             )
         ch = logging.StreamHandler()
         ch.setLevel(logging.DEBUG)
         formatter = logging.Formatter(
-            '%(asctime)s - %(levelname)s - %(message)s')
+            fmt='%(asctime)s - %(levelname)s - [%(module)s.%(funcName)s] - %(message)s', datefmt='%d %I:%M:%S %p')
         ch.setFormatter(formatter)
         self.logger.addHandler(ch)
+
+        logging.getLogger("requests.packages.urllib3.connectionpool").setLevel(logging.WARNING)
 
     def setUser(self, username, password):
         self.username = username
@@ -80,8 +82,8 @@ class API(object):
                     'https': 'http://' + self.proxy,
                 }
                 self.session.proxies.update(proxies)
-            if (
-                self.SendRequest('si/fetch_headers/?challenge_type=signup&guid=' + self.generateUUID(False),
+
+            if (self.SendRequest('si/fetch_headers/?challenge_type=signup&guid=' + self.generateUUID(False),
                                  None, True)):
 
                 data = {'phone_id': self.generateUUID(True),
@@ -131,7 +133,7 @@ class API(object):
                 response = self.session.get(
                     config.API_URL + endpoint)
         except Exception as e:
-            self.logger.warning(str(e))
+            self.logger.error(str(e))
             return False
 
         if response.status_code == 200:
@@ -139,18 +141,33 @@ class API(object):
             self.LastJson = json.loads(response.text)
             return True
         else:
-            self.logger.warning("Request return " +
-                                str(response.status_code) + " error!")
+            self.logger.error("Request return {} error!".format(response.status_code))
             if response.status_code == 429:
+                '''
+                Response Codes
+                If your app exceeds any of these rate limits,
+                you will receive a response with an HTTP response code of 429 (Too Many Requests).
+                The body of the response will consist of the following fields:
+                
+                FIELD           VALUE
+                code            429
+                error_type      OAuthRateLimitException
+                error_message   The maximum number of requests per hour has been exceeded
+                
+                You may also receive responses with an HTTP response code of 400 (Bad Request)
+                if we detect spammy behavior by a person using your app.
+                These errors are unrelated to rate limiting.
+                '''
                 sleep_minutes = 5
                 self.logger.warning("That means 'too many requests'. "
-                                    "I'll go to sleep for %d minutes." % sleep_minutes)
+                                    "I'll go to sleep for {} minutes.".format(sleep_minutes))
                 time.sleep(sleep_minutes * 60)
 
             # for debugging
             try:
                 self.LastResponse = response
                 self.LastJson = json.loads(response.text)
+                self.logger.debug(response.text)
             except:
                 pass
             return False
@@ -413,7 +430,12 @@ class API(object):
             'user_id': userId,
             '_csrftoken': self.token
         })
-        return self.SendRequest('friendships/create/' + str(userId) + '/', self.generateSignature(data))
+        sig = self.generateSignature(data)
+        request_successfull = self.SendRequest('friendships/create/' + str(userId) + '/', sig)
+        # {u'incoming_request': False, u'followed_by': False, u'outgoing_request': False, u'following': True,
+        #  u'blocking': False, u'is_private': False}
+        is_following = self.LastJson['friendship_status']['following']
+        return request_successfull & is_following
 
     def unfollow(self, userId):
         data = json.dumps({
@@ -422,7 +444,8 @@ class API(object):
             'user_id': userId,
             '_csrftoken': self.token
         })
-        return self.SendRequest('friendships/destroy/' + str(userId) + '/', self.generateSignature(data))
+        sig = self.generateSignature(data)
+        return self.SendRequest('friendships/destroy/' + str(userId) + '/', sig)
 
     def block(self, userId):
         data = json.dumps({
@@ -431,7 +454,8 @@ class API(object):
             'user_id': userId,
             '_csrftoken': self.token
         })
-        return self.SendRequest('friendships/block/' + str(userId) + '/', self.generateSignature(data))
+        sig = self.generateSignature(data)
+        return self.SendRequest('friendships/block/' + str(userId) + '/', sig)
 
     def unblock(self, userId):
         data = json.dumps({
@@ -440,7 +464,8 @@ class API(object):
             'user_id': userId,
             '_csrftoken': self.token
         })
-        return self.SendRequest('friendships/unblock/' + str(userId) + '/', self.generateSignature(data))
+        sig = self.generateSignature(data)
+        return self.SendRequest('friendships/unblock/' + str(userId) + '/', sig)
 
     def userFriendship(self, userId):
         data = json.dumps({
@@ -449,13 +474,14 @@ class API(object):
             'user_id': userId,
             '_csrftoken': self.token
         })
-        return self.SendRequest('friendships/show/' + str(userId) + '/', self.generateSignature(data))
+        sig = self.generateSignature(data)
+        return self.SendRequest('friendships/show/' + str(userId) + '/', sig)
 
     def generateSignature(self, data):
         try:
-            parsedData = urllib.parse.quote(data)
+            parsedData = urllib.quote(data)         # python 2
         except AttributeError:
-            parsedData = urllib.quote(data)
+            parsedData = urllib.parse.quote(data)   # python 3
 
         return 'ig_sig_key_version=' + config.SIG_KEY_VERSION + '&signed_body=' + hmac.new(
             config.IG_SIG_KEY.encode('utf-8'), data.encode('utf-8'), hashlib.sha256).hexdigest() + '.' + parsedData
@@ -490,7 +516,10 @@ class API(object):
                 print("Consider temporarily saving the result of this big operation. This will take a while.\n")
         else:
             return False
-        with tqdm(total=total_followers, desc="Getting followers", leave=False) as pbar:
+        with tqdm(total=total_followers,
+                  disable=not self.progress_bar,
+                  desc="Getting followers",
+                  leave=False) as pbar:
             while True:
                 self.getUserFollowers(usernameId, next_max_id)
                 temp = self.LastJson
@@ -526,7 +555,10 @@ class API(object):
                 print("Consider temporarily saving the result of this big operation. This will take a while.\n")
         else:
             return False
-        with tqdm(total=total_following, desc="Getting following", leave=False) as pbar:
+        with tqdm(total=total_following,
+                  disable=not self.progress_bar,
+                  desc="Getting following",
+                  leave=False) as pbar:
             while True:
                 self.getUserFollowings(usernameId, next_max_id)
                 temp = self.LastJson
