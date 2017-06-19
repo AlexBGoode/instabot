@@ -104,7 +104,3 @@ bot_cp_*
 # Settings files
 **/*.txt
 *.checkpoint
-
-*.txt
-
-examples/black-whitelist/blacklist.txt
