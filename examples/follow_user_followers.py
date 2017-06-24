@@ -50,3 +50,4 @@ bot.login(username=args.u, password=args.p,
 
 for username in args.users:
     bot.follow_followers(username)
+

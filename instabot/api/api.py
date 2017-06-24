@@ -5,7 +5,7 @@ import hmac
 import urllib
 import uuid
 import sys
-import logging
+import logging, logging.handlers
 import time
 from random import randint
 from tqdm import tqdm
@@ -30,6 +30,8 @@ from .api_profile import setNameAndPhone
 from .prepare import get_credentials
 from .prepare import delete_credentials
 
+from .. import RateControl
+
 
 # The urllib library was split into other modules from Python 2 to Python 3
 if sys.version_info.major == 3:
@@ -45,19 +47,55 @@ class API(object):
 
         # handle logging
         self.logger = logging.getLogger('[instabot]')
-        self.logger.setLevel(logging.DEBUG)
-        logging.basicConfig(format='%(asctime)s %(levelname)s [%(module)s.%(funcName)s] %(message)s', datefmt='%d %I:%M:%S %p',
-                            filename='instabot.log',
-                            level=logging.INFO
-                            )
-        ch = logging.StreamHandler()
-        ch.setLevel(logging.DEBUG)
-        formatter = logging.Formatter(
+        logFormatter = logging.Formatter(
             fmt='%(asctime)s - %(levelname)s - [%(module)s.%(funcName)s] - %(message)s', datefmt='%d %I:%M:%S %p')
-        ch.setFormatter(formatter)
-        self.logger.addHandler(ch)
-
+        # Adding a rotation log message handler
+        fileHandler = logging.handlers.TimedRotatingFileHandler('instabot.log', interval=3, when='h', backupCount=8)
+        fileHandler.suffix = "%Y-%m-%d.txt"
+        fileHandler.setFormatter(logFormatter)
+        fileHandler.setLevel(logging.DEBUG)
+        self.logger.addHandler(fileHandler)
+        '''
+        # Adding a console log message handler
+        consoleHandler = logging.StreamHandler()
+        # consoleHandler = logging.StreamHandler(sys.stdout)
+        consoleHandler.setFormatter(logFormatter)
+        consoleHandler.setLevel(logging.DEBUG)
+        self.logger.addHandler(consoleHandler)
+        '''
         logging.getLogger("requests.packages.urllib3.connectionpool").setLevel(logging.WARNING)
+        logging.getLogger("urllib3").setLevel(logging.WARNING)
+
+        # self.logger.setLevel(logging.DEBUG)
+        # logging.basicConfig(format='%(asctime)s %(levelname)s [%(module)s.%(funcName)s] %(message)s', datefmt='%d %I:%M:%S %p',
+        #                     filename='instabot.log',
+        #                     level=logging.INFO
+        #                     )
+        #
+        # ch = logging.StreamHandler()
+        # ch.setLevel(logging.DEBUG)
+        # formatter = logging.Formatter(
+        #     fmt='%(asctime)s - %(levelname)s - [%(module)s.%(funcName)s] - %(message)s', datefmt='%d %I:%M:%S %p')
+        # ch.setFormatter(formatter)
+        # self.logger.addHandler(ch)
+
+
+        '''
+        logger.setLevel(logging.DEBUG)
+        logFormatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s")
+        consoleHandler = logging.StreamHandler(sys.stdout)
+        consoleHandler.setFormatter(logFormatter)
+        consoleHandler.setLevel(logging.INFO)
+        logger.addHandler(consoleHandler)
+        # Adding the rotation log message handler
+        logFilename = self.path + "/log.txt"
+        fileHandler = TimedRotatingFileHandler(logFilename, when='h', backupCount=3)
+        fileHandler.setFormatter(logFormatter)
+        fileHandler.setLevel(logging.DEBUG)
+        logger.addHandler(fileHandler)
+        '''
+
+        self.rc = RateControl.RateControl(timeFrame=3600, rateLimit=5000, lookAheadRatio=.1)
 
     def setUser(self, username, password):
         self.username = username
@@ -114,6 +152,8 @@ class API(object):
         return not self.isLoggedIn
 
     def SendRequest(self, endpoint, post=None, login=False):
+        if self.rc.inLimit():
+            time.sleep(1)
         if (not self.isLoggedIn and not login):
             self.logger.critical("Not logged in.")
             raise Exception("Not logged in!")
@@ -133,7 +173,7 @@ class API(object):
                 response = self.session.get(
                     config.API_URL + endpoint)
         except Exception as e:
-            self.logger.error(str(e))
+            self.logger.error(e)
             return False
 
         if response.status_code == 200:
@@ -153,6 +193,12 @@ class API(object):
                 code            429
                 error_type      OAuthRateLimitException
                 error_message   The maximum number of requests per hour has been exceeded
+                
+                {"message": "checkpoint_required", "checkpoint_url": "https://i.instagram.com/challenge/", "lock": true, "status": "fail"}
+                
+                code            400
+                error_type      APINotAllowedError
+                error_message   you cannot like this media
                 
                 You may also receive responses with an HTTP response code of 400 (Bad Request)
                 if we detect spammy behavior by a person using your app.
@@ -403,7 +449,10 @@ class API(object):
             '_csrftoken': self.token,
             'media_id': mediaId
         })
-        return self.SendRequest('media/' + str(mediaId) + '/like/', self.generateSignature(data))
+        sig = self.generateSignature(data)
+        request_successfull = self.SendRequest('media/' + str(mediaId) + '/like/', sig)
+        is_liked = (self.LastJson['status'] == 'ok')
+        return request_successfull & is_liked
 
     def unlike(self, mediaId):
         data = json.dumps({
@@ -512,8 +561,10 @@ class API(object):
                 total_followers = amount
             else:
                 total_followers = self.LastJson["user"]['follower_count']
+            self.logger.info("There are {} total followers".format(total_followers))
             if total_followers > 200000:
-                print("Consider temporarily saving the result of this big operation. This will take a while.\n")
+                self.logger.warn("Consider temporarily saving the result of this big operation. "
+                                 "This will take a while.")
         else:
             return False
         with tqdm(total=total_followers,
@@ -529,14 +580,16 @@ class API(object):
                         followers.append(item)
                         sleep_track += 1
                         if sleep_track >= 20000:
-                            sleep_time = randint(120, 180)
-                            print("\nWaiting %.2f min. due to too many requests." % float(sleep_time / 60))
+                            sleep_time = randint(2, 4)
+                            self.logger.info("Waiting {0} min. due to too many requests. As for now {1} followers"\
+                                             .format(sleep_time, len(followers)))
                             time.sleep(sleep_time)
                             sleep_track = 0
                     if len(temp["users"]) == 0 or len(followers) >= total_followers:
                         return followers[:total_followers]
                 except:
                     return followers[:total_followers]
+
                 if temp["big_list"] is False:
                     return followers[:total_followers]
                 next_max_id = temp["next_max_id"]
@@ -552,7 +605,8 @@ class API(object):
             else:
                 total_following = self.LastJson["user"]['following_count']
             if total_following > 200000:
-                print("Consider temporarily saving the result of this big operation. This will take a while.\n")
+                self.logger.warn("Consider temporarily saving the result of this big operation. "
+                                 "This will take a while.")
         else:
             return False
         with tqdm(total=total_following,
@@ -568,8 +622,9 @@ class API(object):
                         following.append(item)
                         sleep_track += 1
                         if sleep_track >= 20000:
-                            sleep_time = randint(120, 180)
-                            print("\nWaiting %.2f min. due to too many requests." % float(sleep_time / 60))
+                            sleep_time = randint(2, 4)
+                            self.logger.info("Waiting {0} min. due to too many requests. As for now {1} followers"\
+                                             .format(sleep_time, len(followers)))
                             time.sleep(sleep_time)
                             sleep_track = 0
                     if len(temp["users"]) == 0 or len(following) >= total_following:
