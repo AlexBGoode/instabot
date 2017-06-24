@@ -1,7 +1,7 @@
 from random import randint
 from time import time, sleep
 
-import logger
+import logging
 
 
 class RateControl(object):
@@ -20,7 +20,7 @@ class RateControl(object):
         self.indexNow = 0
         self.slowStep = float(timeFrame) / rateLimit / lookAheadRatio * 2
         # self.slowStep = float(timeFrame) / rateLimit
-        logger.logger.info('Slowing delay is {:.1f} seconds'.format(self.slowStep))
+        logging.info('Slowing delay is {:.1f} seconds'.format(self.slowStep))
         self.slowFactor = self.slowStep
 
     def inLimit(self):
@@ -31,7 +31,7 @@ class RateControl(object):
         deltaLookAhead = int(timeNow - timeLookAhead)
 
         if deltaLookAhead < self.timeFrame:
-            logger.logger.warn('Limit is coming, slowing with {:.1f} seconds'.format(self.slowFactor))
+            logging.warn('Limit is coming, slowing with {:.1f} seconds'.format(self.slowFactor))
             self.slowFactor += self.slowStep * (1 - self.lookAheadRatio) * .7
             # self.slowFactor += self.slowStep * .1
             # sleep(self.slowFactor)
@@ -50,7 +50,7 @@ class RateControl(object):
 
         if deltaNext < self.timeFrame:
             delay = self.timeFrame - deltaNext
-            logger.logger.info('Have to delay {} seconds'.format(delay))
+            logging.info('Have to delay {} seconds'.format(delay))
             sleep(delay)
 
         self.timestamps[self.indexNow] = time()
@@ -63,7 +63,7 @@ if __name__ == '__main__':
     t_start = time()
     for k in range(1, 101):
         if rc.inLimit():
-            logger.logger.info(k)
+            logging.info(k)
             sleep(.5 * randint(0, 1))
     t_stop = time()
     print t_stop - t_start

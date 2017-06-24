@@ -50,19 +50,19 @@ class API(object):
         logFormatter = logging.Formatter(
             fmt='%(asctime)s - %(levelname)s - [%(module)s.%(funcName)s] - %(message)s', datefmt='%d %I:%M:%S %p')
         # Adding a rotation log message handler
-        fileHandler = logging.handlers.TimedRotatingFileHandler('instabot.log', interval=3, when='h', backupCount=8)
-        fileHandler.suffix = "%Y-%m-%d.txt"
+        fileHandler = logging.handlers.TimedRotatingFileHandler('instabot.txt', interval=3, when='h', backupCount=8)
+        # fileHandler.suffix = "%Y-%m-%d.txt"
         fileHandler.setFormatter(logFormatter)
         fileHandler.setLevel(logging.DEBUG)
         self.logger.addHandler(fileHandler)
-        '''
+
         # Adding a console log message handler
-        consoleHandler = logging.StreamHandler()
-        # consoleHandler = logging.StreamHandler(sys.stdout)
+        # consoleHandler = logging.StreamHandler()
+        consoleHandler = logging.StreamHandler(sys.stdout)
         consoleHandler.setFormatter(logFormatter)
         consoleHandler.setLevel(logging.DEBUG)
         self.logger.addHandler(consoleHandler)
-        '''
+
         logging.getLogger("requests.packages.urllib3.connectionpool").setLevel(logging.WARNING)
         logging.getLogger("urllib3").setLevel(logging.WARNING)
 
