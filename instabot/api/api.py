@@ -47,18 +47,21 @@ class API(object):
 
         # handle logging
         self.logger = logging.getLogger('[instabot]')
+        self.logger.setLevel(logging.DEBUG)
+
         logFormatter = logging.Formatter(
             fmt='%(asctime)s - %(levelname)s - [%(module)s.%(funcName)s] - %(message)s', datefmt='%d %I:%M:%S %p')
         # Adding a rotation log message handler
-        fileHandler = logging.handlers.TimedRotatingFileHandler('instabot.txt', interval=3, when='h', backupCount=8)
+        # fileHandler = logging.handlers.TimedRotatingFileHandler('instabot.log', interval=1, when='m', backupCount=3)
+        fileHandler = logging.handlers.RotatingFileHandler('instabot.log', maxBytes=102400, backupCount=3)
         # fileHandler.suffix = "%Y-%m-%d.txt"
         fileHandler.setFormatter(logFormatter)
         fileHandler.setLevel(logging.DEBUG)
         self.logger.addHandler(fileHandler)
 
         # Adding a console log message handler
-        # consoleHandler = logging.StreamHandler()
-        consoleHandler = logging.StreamHandler(sys.stdout)
+        consoleHandler = logging.StreamHandler()
+        # consoleHandler = logging.StreamHandler(sys.stdout)
         consoleHandler.setFormatter(logFormatter)
         consoleHandler.setLevel(logging.DEBUG)
         self.logger.addHandler(consoleHandler)
