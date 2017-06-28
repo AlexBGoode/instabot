@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
     Filter functions for media and user lists.
 """
@@ -56,7 +57,7 @@ def check_media(self, media_id):
 # filter users
 
 
-def search_stop_words_in_user(self, user_info):
+def stop_words_found(self, user_info):
     text = ''
     if 'biography' in user_info:
         text += user_info['biography'].lower()
@@ -68,7 +69,9 @@ def search_stop_words_in_user(self, user_info):
         text += user_info['full_name'].lower()
 
     for stop_word in self.stop_words:
-        if stop_word in text:
+        s_w = stop_word.decode('utf-8')
+        if (text.find(s_w) > 0):
+            self.logger.debug("Found a stop word in the user's info: " + text)
             return True
 
     return False
@@ -174,7 +177,7 @@ def check_user(self, user_id, filter_closed_acc=False):
                 user_info["username"]))
             return False  # bot or inactive user
 
-    if search_stop_words_in_user(self, user_info):
+    if stop_words_found(self, user_info):
         self.logger.debug("Check FALSE: stop words found - " + user_info["username"])
         return False
 
@@ -201,7 +204,7 @@ def check_not_bot(self, user_id):
         if user_info["following_count"] > self.max_following_to_block:
             return False  # massfollower
 
-    if search_stop_words_in_user(self, user_info):
+    if stop_words_found(self, user_info):
         return False
 
     return True

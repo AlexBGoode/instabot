@@ -4,13 +4,13 @@ from . import delay
 
 
 def like(self, media_id):
-    if limits.check_if_bot_can_like(self):
-        delay.like_delay(self)
-        if super(self.__class__, self).like(media_id):
-            self.total_liked += 1
-            return True
-    else:
-        self.logger.info("Out of likes for today.")
+    delay.like_delay(self)
+    if super(self.__class__, self).like(media_id):
+        self.total_liked += 1
+        return True
+    # if limits.check_if_bot_can_like(self):
+    # else:
+    #     self.logger.info("Out of likes for today.")
     return False
 
 
@@ -19,14 +19,14 @@ def like_medias(self, medias):
     if len(medias) == 0:
         self.logger.info("Nothing to like.")
         return broken_items
-    self.logger.info("Going to like %d medias." % (len(medias)))
+    self.logger.info("Going to like {} medias.".format(len(medias)))
 
     for media in tqdm(medias, disable = not self.progress_bar):
         if not self.like(media):
             delay.error_delay(self)
             broken_items = medias[medias.index(media):]
             break
-    self.logger.info("DONE: Total liked %d medias." % self.total_liked)
+    self.logger.info("DONE: Total liked {} medias.".format(self.total_liked))
     return broken_items
 
 
@@ -40,7 +40,7 @@ def like_user(self, user_id, amount=None):
     """ Likes last user_id's medias """
     if not self.check_user(user_id, filter_closed_acc=True):
         return False
-    self.logger.info("Liking user_%s's feed:" % user_id)
+    self.logger.info("Liking user_{}'s feed:".format(user_id))
     user_id = self.convert_to_user_id(user_id)
     medias = self.get_user_medias(user_id)
     if not medias:
@@ -74,7 +74,7 @@ def like_followers(self, user_id, nlikes=None):
         return
     follower_ids = self.get_user_followers(user_id)
     if not follower_ids:
-        self.logger.info("%s not found / closed / has no followers." % user_id)
+        self.logger.info("User {} not found / closed / has no followers.".format(user_id))
     else:
         self.like_users(follower_ids, nlikes)
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import datetime
 import atexit
 import signal
@@ -45,18 +46,18 @@ class Bot(API):
                  whitelist=False,
                  blacklist=False,
                  comments_file=False,
-                 max_likes_per_day=1000,
-                 max_unlikes_per_day=1000,
-                 max_follows_per_day=350,
-                 max_unfollows_per_day=350,
-                 max_comments_per_day=100,
-                 max_blocks_per_day=100,
-                 max_unblocks_per_day=100,
+                 # max_likes_per_day=1000,
+                 # max_unlikes_per_day=1000,
+                 # max_follows_per_day=350,
+                 # max_unfollows_per_day=350,
+                 # max_comments_per_day=100,
+                 # max_blocks_per_day=100,
+                 # max_unblocks_per_day=100,
                  max_likes_to_like=100,
                  filter_users=True,
                  max_followers_to_follow=2000,
                  min_followers_to_follow=10,
-                 max_following_to_follow=2000,
+                 max_following_to_follow=7500,
                  min_following_to_follow=10,
                  max_followers_to_following_ratio=10,
                  max_following_to_followers_ratio=2,
@@ -69,7 +70,7 @@ class Bot(API):
                  comment_delay=61,
                  block_delay=61,
                  unblock_delay=61,
-                 stop_words=['shop', 'store', 'free', 'smm'],
+                 stop_words=['shop', 'store', 'free', 'smm', 'магазин', 'доставка'],
                  progress_bar=False):
         super(self.__class__, self).__init__()
 
@@ -84,13 +85,13 @@ class Bot(API):
 
         # limits - follow
         self.filter_users = filter_users
-        self.max_likes_per_day = max_likes_per_day
-        self.max_unlikes_per_day = max_unlikes_per_day
-        self.max_follows_per_day = max_follows_per_day
-        self.max_unfollows_per_day = max_unfollows_per_day
-        self.max_comments_per_day = max_comments_per_day
-        self.max_blocks_per_day = max_blocks_per_day
-        self.max_unblocks_per_day = max_unblocks_per_day
+        # self.max_likes_per_day = max_likes_per_day
+        # self.max_unlikes_per_day = max_unlikes_per_day
+        # self.max_follows_per_day = max_follows_per_day
+        # self.max_unfollows_per_day = max_unfollows_per_day
+        # self.max_comments_per_day = max_comments_per_day
+        # self.max_blocks_per_day = max_blocks_per_day
+        # self.max_unblocks_per_day = max_unblocks_per_day
         self.max_likes_to_like = max_likes_to_like
         self.max_followers_to_follow = max_followers_to_follow
         self.min_followers_to_follow = min_followers_to_follow
@@ -152,7 +153,7 @@ class Bot(API):
 
     def login(self, **args):
         super(self.__class__, self).login(**args)
-        self.prepare()
+        # self.prepare()
         signal.signal(signal.SIGTERM, self.logout)
         atexit.register(self.logout)
 

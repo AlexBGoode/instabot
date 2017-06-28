@@ -155,8 +155,8 @@ class API(object):
         return not self.isLoggedIn
 
     def SendRequest(self, endpoint, post=None, login=False):
-        if self.rc.inLimit():
-            time.sleep(1)
+        # if self.rc.inLimit():
+        time.sleep(.75)
         if (not self.isLoggedIn and not login):
             self.logger.critical("Not logged in.")
             raise Exception("Not logged in!")

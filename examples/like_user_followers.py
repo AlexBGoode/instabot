@@ -20,11 +20,11 @@ parser.add_argument('users', type=str, nargs='+', help='users')
 args = parser.parse_args()
 
 bot = Bot(
-    max_likes_per_day=10000,
-    max_unlikes_per_day=1000,
-    max_follows_per_day=35000,              # 350
-    max_unfollows_per_day=350,
-    max_comments_per_day=0,
+    # max_likes_per_day=10000,
+    # max_unlikes_per_day=1000,
+    # max_follows_per_day=35000,              # 350
+    # max_unfollows_per_day=350,
+    # max_comments_per_day=0,
     max_likes_to_like=100,
     filter_users=True,
     max_followers_to_follow=19000,

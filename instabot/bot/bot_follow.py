@@ -9,18 +9,21 @@ def follow(self, user_id):
     user_id = self.convert_to_user_id(user_id)
     if not self.check_user(user_id, True):
         return True
-    if limits.check_if_bot_can_follow(self):
-        delay.follow_delay(self)
-        if super(self.__class__, self).follow(user_id):
-            self.logger.debug("Followed - " + user_name)
-            self.total_followed += 1
-            return True
-        else:
-            self.logger.error("Not followed - " + user_name)
 
+    delay.follow_delay(self)
+    if super(self.__class__, self).follow(user_id):
+        self.logger.info("Followed - " + user_name)
+        self.total_followed += 1
+        return True
     else:
-        self.logger.info("Out of follows for today.")
-    return False
+        self.logger.info("Not followed - " + user_name)
+        return False
+
+
+    # if limits.check_if_bot_can_follow(self):
+    # else:
+    #     self.logger.info("Out of follows for today.")
+    # return False
 
 
 def follow_users(self, user_ids):
