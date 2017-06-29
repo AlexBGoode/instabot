@@ -215,8 +215,8 @@ class API(object):
             # for debugging
             try:
                 self.LastResponse = response
-                self.LastJson = json.loads(response.text)
                 self.logger.debug(response.text)
+                self.LastJson = json.loads(response.text)
             except:
                 pass
             return False
@@ -453,9 +453,13 @@ class API(object):
             'media_id': mediaId
         })
         sig = self.generateSignature(data)
-        request_successfull = self.SendRequest('media/' + str(mediaId) + '/like/', sig)
-        is_liked = (self.LastJson['status'] == 'ok')
-        return request_successfull & is_liked
+        if (self.SendRequest('media/' + str(mediaId) + '/like/', sig)):
+            try:
+                return self.LastJson['status'] == 'ok'
+            except KeyError:
+                pass
+
+        return False
 
     def unlike(self, mediaId):
         data = json.dumps({
@@ -483,11 +487,15 @@ class API(object):
             '_csrftoken': self.token
         })
         sig = self.generateSignature(data)
-        request_successfull = self.SendRequest('friendships/create/' + str(userId) + '/', sig)
         # {u'incoming_request': False, u'followed_by': False, u'outgoing_request': False, u'following': True,
         #  u'blocking': False, u'is_private': False}
-        is_following = self.LastJson['friendship_status']['following']
-        return request_successfull & is_following
+        if (self.SendRequest('friendships/create/' + str(userId) + '/', sig)):
+            try:
+                return self.LastJson['friendship_status']['following']
+            except KeyError:
+                pass
+
+        return False
 
     def unfollow(self, userId):
         data = json.dumps({
@@ -497,7 +505,13 @@ class API(object):
             '_csrftoken': self.token
         })
         sig = self.generateSignature(data)
-        return self.SendRequest('friendships/destroy/' + str(userId) + '/', sig)
+        if (self.SendRequest('friendships/destroy/' + str(userId) + '/', sig)):
+            try:
+                return not self.LastJson['friendship_status']['following']
+            except KeyError:
+                pass
+
+        return False
 
     def block(self, userId):
         data = json.dumps({

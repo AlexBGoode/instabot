@@ -16,7 +16,7 @@ def follow(self, user_id):
         self.total_followed += 1
         return True
     else:
-        self.logger.info("Not followed - " + user_name)
+        self.logger.error("Not followed - " + user_name)
         return False
 
 

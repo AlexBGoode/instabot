@@ -8,14 +8,14 @@ def unfollow(self, user_id):
     user_id = self.convert_to_user_id(user_id)
     if self.check_user(user_id):
         return True  # whitelisted user
-    if limits.check_if_bot_can_unfollow(self):
-        delay.unfollow_delay(self)
-        if super(self.__class__, self).unfollow(user_id):
-            self.total_unfollowed += 1
-            return True
-    else:
-        self.logger.info("Out of unfollows for today.")
-    return False
+    delay.unfollow_delay(self)
+    if super(self.__class__, self).unfollow(user_id):
+        self.total_unfollowed += 1
+        return True
+    # if limits.check_if_bot_can_unfollow(self):
+    # else:
+    #     self.logger.info("Out of unfollows for today.")
+    # return False
 
 
 def unfollow_users(self, user_ids):

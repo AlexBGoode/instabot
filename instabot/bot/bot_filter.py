@@ -152,7 +152,7 @@ def check_user(self, user_id, filter_closed_acc=False):
         try:
             ratio = user_info["follower_count"] / user_info["following_count"]
             if ratio > self.max_followers_to_following_ratio:
-                self.logger.debug("Check FALSE: follower/following ratio [{0}/{1}] - {2}".format(
+                self.logger.debug("Check FALSE: followers/following ratio [{0}/{1}] - {2}".format(
                     user_info["follower_count"],
                     user_info["following_count"],
                     user_info["username"]))
@@ -160,7 +160,7 @@ def check_user(self, user_id, filter_closed_acc=False):
 
             ratio = user_info["following_count"] / user_info["follower_count"]
             if ratio > self.max_following_to_followers_ratio:
-                self.logger.debug("Check FALSE: following/follower ratio [{0}/{1}] - {2}".format(
+                self.logger.debug("Check FALSE: following/followers ratio [{0}/{1}] - {2}".format(
                     user_info["following_count"],
                     user_info["follower_count"],
                     user_info["username"]))
