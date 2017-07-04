@@ -12,8 +12,8 @@ def follow(self, user_id):
 
     delay.follow_delay(self)
     if super(self.__class__, self).follow(user_id):
-        self.logger.info("Followed - " + user_name)
         self.total_followed += 1
+        self.logger.info("Followed - {}, in total {}".format(user_name, self.total_followed))
         return True
     else:
         self.logger.error("Not followed - " + user_name)

@@ -206,6 +206,17 @@ class API(object):
                 You may also receive responses with an HTTP response code of 400 (Bad Request)
                 if we detect spammy behavior by a person using your app.
                 These errors are unrelated to rate limiting.
+                
+                400
+                {"message": "feedback_required", "spam": true, 
+                "feedback_title": "You\u2019re Temporarily Blocked", 
+                "feedback_message": "It looks like you were misusing this feature by going too fast. 
+                You\u2019ve been blocked from using it.\n\nLearn more about blocks in the Help Center. 
+                We restrict certain content and actions to protect our community. 
+                Tell us if you think we made a mistake.", 
+                "feedback_url": "repute/report_problem/instagram_follow_users/", 
+                "feedback_appeal_label": "Report problem", "feedback_ignore_label": "OK", 
+                "feedback_action": "report_problem", "status": "fail"}
                 '''
                 sleep_minutes = 5
                 self.logger.warning("That means 'too many requests'. "
